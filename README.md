@@ -12,7 +12,10 @@
 #define TFT_SCLK 18    // SPI clock
 ```
 
-# Integrated ESP32 info:
+# Integrated ESP32:
+The integrated esp32 needs 
+
 For more info, go to 
-- https://github.com/ardnew/ESP32-3248S035/blob/main/include/ESP323248S035.hpp
+- https://github.com/jonpul/ESP32-2432S024C
+- https://github.com/ardnew/ESP32-3248S035/
 - https://www.openhasp.com/0.7.0/hardware/sunton/esp32-3248s035/
