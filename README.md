@@ -1,19 +1,22 @@
 # Getting screen to work
-1. Go to the TFT\_eSPI folder (Arduino/libraries/TFT\_eSPI)
-2. Edit the 'User\_Setup\_Select.h' and make sure the only include is '#include <User_Setup.h>'
-3. Edit the 'User_Setup.h' and make sure the '#define ILI9486_DRIVER' is uncommented
-4. Edit the pins that are connected to the arduino; example:
+1. Install the TFT_eSPI library on arduino ide
+2. Go to the TFT\_eSPI folder (Arduino/libraries/TFT\_eSPI) on device
+3. Move the files in the github TFT\_eSPI folder to other folder. Replace if asked
+4. Edit the 'User\_Setup\_Select.h' and uncomment include line that corresponds to used screen. You need to comment all other includes.
+### Example:
 ```
-#define TFT_CS   15    // Chip select pin for TFT 
-#define TFT_DC   2     // Data/Command pin (LCD_RS)
-#define TFT_RST  4     // Reset pin (or -1 if tied to ESP32 reset)
-#define TFT_MOSI 23    // SPI MOSI
-#define TFT_MISO 19    // SPI MISO (if reading/touch)
-#define TFT_SCLK 18    // SPI clock
+#include <User_Setups/Setup666_Integrated_ESP32.h>
+//#include <User_Setups/Setup667_OSOYOO_SPI_RPI_35.h>
+```
+
+If we were using the osoyoo 3.5" display for RPI, we need to uncomment and comment:
+
+```
+//#include <User_Setups/Setup666_Integrated_ESP32.h>
+#include <User_Setups/Setup667_OSOYOO_SPI_RPI_35.h>
 ```
 
 # Integrated ESP32:
-The integrated esp32 needs 
 
 For more info, go to 
 - https://github.com/jonpul/ESP32-2432S024C
