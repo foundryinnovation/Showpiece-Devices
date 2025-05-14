@@ -17,6 +17,7 @@ If we were using the osoyoo 3.5" display for RPI, we need to uncomment and comme
 ```
 
 # Integrated ESP32:
+The esp32 model is 'ESP32-3248S035C'
 
 For more info, go to 
 - https://github.com/jonpul/ESP32-2432S024C
