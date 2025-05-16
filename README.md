@@ -20,6 +20,7 @@ If we were using the osoyoo 3.5" display for RPI, we need to uncomment and comme
 The esp32 model is 'ESP32-3248S035R'
 
 For more info, go to 
+- https://www.elektroda.com/rtvforum/topic4058635.html
 - https://github.com/jonpul/ESP32-2432S024C
 - https://github.com/ardnew/ESP32-3248S035/
 - https://www.openhasp.com/0.7.0/hardware/sunton/esp32-3248s035/
