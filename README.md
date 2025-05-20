@@ -24,3 +24,7 @@ For more info, go to
 - https://github.com/jonpul/ESP32-2432S024C
 - https://github.com/ardnew/ESP32-3248S035/
 - https://www.openhasp.com/0.7.0/hardware/sunton/esp32-3248s035/
+
+# Ideas
+- Holiday of the day
+- anything of the day
