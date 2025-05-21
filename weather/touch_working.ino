@@ -4,22 +4,25 @@
 
 TFT_eSPI tft = TFT_eSPI();
 
-#define XPT2046_IRQ 36   // T_IRQ
-#define XPT2046_MOSI 13  // T_DIN
-#define XPT2046_MISO 12  // T_OUT
-#define XPT2046_CLK 14   // T_CLK
-#define XPT2046_CS 33    // T_CS
+/*
+These are the pins that need to be set for our touchscreen! (in User_Setup.h)
+#define TFT_MOSI 13   // HSPI MOSI
+#define TFT_MISO 12   // HSPI MISO (TFT SDO)
+#define TFT_SCLK 14   // HSPI SCK
+#define T_CS     33     // Touch CS
+#define T_IRQ    36     // Touch IRQ (pen detect)
 
+*/
 
 SPIClass touchscreenSPI = SPIClass(HSPI);
-XPT2046_Touchscreen touchscreen(XPT2046_CS, XPT2046_IRQ);
+XPT2046_Touchscreen touchscreen(T_CS, T_IRQ);
 
 void setup() {
   Serial.begin(115200);
   tft.init();
   tft.setRotation(1);
 
-  touchscreenSPI.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
+  touchscreenSPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, T_CS);
   touchscreen.begin(touchscreenSPI);
 
   tft.fillScreen(TFT_WHITE);
