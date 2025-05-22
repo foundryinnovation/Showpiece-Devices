@@ -1,9 +1,11 @@
 // See SetupX_Template.h for all options available
 #define USER_SETUP_ID 666
 
-//#define ILI9486_DRIVER 
+#define USER_SETUP_INFO "ESP32_3248S035R_ST7796_XPT2046"
+#define USE_HSPI_PORT
+
 #define ILI9488_DRIVER 
-//#define ILI9341_DRIVER
+
 
 
 #define TFT_MISO 12 // (leave TFT SDO disconnected if other SPI devices share MISO)
@@ -15,6 +17,11 @@
 #define TFT_BL 27
 
 #define TFT_BACKLIGHT_ON HIGH
+
+// Touch controller (XPT2046) on the same HSPI bus:
+#define XPT2046_TOUCH    // enable the XPT2046 resistive touch driver
+#define T_CS     33     // Touch CS
+#define T_IRQ    36     // Touch IRQ (pen detect)
 
 // Optional touch screen chip select
 //#define TOUCH_CS 5 // Chip select pin (T_CS) of touch screen
@@ -36,7 +43,10 @@
 // #define SPI_FREQUENCY  80000000
 
 // Optional reduced SPI frequency for reading TFT
-#define SPI_READ_FREQUENCY  16000000
+//#define SPI_READ_FREQUENCY  16000000
+#define SPI_READ_FREQUENCY  20000000
 
 // SPI clock frequency for touch controller
 #define SPI_TOUCH_FREQUENCY  2500000
+
+#define SUPPORT_TRANSACTIONS
