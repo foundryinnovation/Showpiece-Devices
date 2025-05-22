@@ -39,9 +39,7 @@ std::vector<WindowDraw> windows;
 TFT_eSPI tft = TFT_eSPI();
 SPIClass touchscreenSPI = SPIClass(HSPI);
 XPT2046_Touchscreen touchscreen(T_CS, T_IRQ);
-CalibrateOffset offsets{ -0.13, 527.99, 0.09, -7.60};
-
-
+const CalibrateOffset offsets{-0.13, 527.99, 0.09, -7.60};
 
 ScreenPoint getPoint(){
   TS_Point p = touchscreen.getPoint();
@@ -53,12 +51,6 @@ ScreenPoint getPoint(){
   if(yCoord < 0) yCoord = 0;
   if(yCoord >= tft.height()) yCoord = tft.height() - 1;
 
-  Serial.print("IN GETPOINT");
-  Serial.print(xCoord);
-  Serial.print(" ");
-  Serial.print(yCoord);
-  Serial.println();
-
   return (ScreenPoint){xCoord, yCoord};
 }
 
@@ -69,9 +61,6 @@ boolean isTouched(){
 void drawBall(){
     Serial.print("Touched ");
     ScreenPoint p = getPoint();
-    //ScreenPoint p;
-    //p.x = map(sp.x, 200, 3700, 1, 480);
-    //p.y = map(sp.y, 240, 3800, 1, 320);
 
     Serial.print(p.x);
     Serial.print(" ");
@@ -97,41 +86,21 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
+  //touchscreen
   tft.init();
   tft.setRotation(1);
-
   touchscreenSPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, T_CS);
   touchscreen.begin(touchscreenSPI);
-
   tft.fillScreen(TFT_WHITE);
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
 
-
+  //windows
   windows.push_back(drawWindowOne);
   windows.push_back(drawWindowTwo);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  /*
-  Serial.println("Doing for loop");
-  for(int i = 0; i < 2; i++){
-    Serial.print("i = ");
-    Serial.print(i);
-    Serial.println();
-  
-    windows.at(i)();
-    delay(100);
-  }
-  delay(2000);
-  */
   if (isTouched()) {
-    Serial.print("REGULAR POINT ");
-    TS_Point p = touchscreen.getPoint();
-    Serial.print(p.x);
-    Serial.print(" ");
-    Serial.print(p.y);
-    Serial.println();
     drawBall();
   }
 }
