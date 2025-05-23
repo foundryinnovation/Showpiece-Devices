@@ -6,7 +6,16 @@
 #include <XPT2046_Touchscreen.h>
 
 
-typedef void (*WindowDraw)(); //for making a list of function pointers
+typedef void (*WindowDraw)(); //for making a list of function pointers; respresents drawing the window
+
+typedef void (*WindowEvent)(); //for making a list of function pointers
+
+typedef struct WindowObject {
+  WindowDraw drawFunction;
+  WindowEvent eventFunction;
+
+  WindowObject(WindowDraw drawer, WindowEvent eventer) : drawFunction(drawer), eventFunction(eventer) {}
+} WindowObject;
 
 typedef struct CalibrateOffset {
   float xCalM;
@@ -20,26 +29,26 @@ typedef struct ScreenPoint {
   int y;
 } ScreenPoint;
 
-
 ScreenPoint getPoint();
 boolean isTouched();
 void drawBall();
 void drawWindowOne();
 void drawWindowTwo();
-void drawWindowThree();
 
 //wifi
 const char* SSID = "Innovation_Foundry";
 const char* PASSWORD = "@Innovate22";
 
 //windows
-std::vector<WindowDraw> windows;
+std::vector<WindowObject> windows;
+WindowObject* currentWindow;
 
 //touchscreen
 TFT_eSPI tft = TFT_eSPI();
 SPIClass touchscreenSPI = SPIClass(HSPI);
 XPT2046_Touchscreen touchscreen(T_CS, T_IRQ);
-const CalibrateOffset offsets{-0.13, 527.99, 0.09, -7.60};
+const CalibrateOffset offsets{-0.13, 502, 0.09, -27.60};
+int tempstate = 0;
 
 ScreenPoint getPoint(){
   TS_Point p = touchscreen.getPoint();
@@ -70,16 +79,31 @@ void drawBall(){
 }
 
 void drawWindowOne(){
-  Serial.println("Rat");
+  Serial.println("draw: in window 1");
+  tft.fillScreen(TFT_RED);
+}
+
+void eventWindowOne(){
+  Serial.println("event: in window 1");
+  if (isTouched()) {
+    tempstate++;
+    currentWindow = &windows.at(tempstate % windows.size());
+    currentWindow->drawFunction();
+    //drawBall();
+    delay(100);
+  }
 }
 
 void drawWindowTwo(){
-  Serial.println("Hamburger");
+  Serial.println("draw: in window 2");
+  tft.fillScreen(TFT_BLUE);
 }
 
-
-void drawWindowThree(){
-  Serial.println("Garbonzo beans");
+void eventWindowTwo(){
+  Serial.println("event: in window 2");
+  if (isTouched()) {
+    drawBall();
+  }
 }
 
 void setup() {
@@ -95,13 +119,14 @@ void setup() {
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
 
   //windows
-  windows.push_back(drawWindowOne);
-  windows.push_back(drawWindowTwo);
+  windows.push_back(WindowObject(drawWindowOne, eventWindowOne));
+  windows.push_back(WindowObject(drawWindowTwo, eventWindowTwo));
+
+  currentWindow = &windows.at(0);
+  currentWindow->drawFunction();
 }
 
 void loop() {
-  if (isTouched()) {
-    drawBall();
-  }
+  currentWindow->eventFunction();
 }
 
