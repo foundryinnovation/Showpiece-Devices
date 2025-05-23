@@ -29,3 +29,4 @@ For more info, go to
 - Holiday of the day
 - anything of the day
 - use calibrate code to get offset first, then manually add to code
+- website where they can edit stuff :)‽‽‽‽‽‽‽‽‽‽
