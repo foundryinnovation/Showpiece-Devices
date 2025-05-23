@@ -25,6 +25,7 @@ For more info, go to
 - https://github.com/ardnew/ESP32-3248S035/
 - https://www.openhasp.com/0.7.0/hardware/sunton/esp32-3248s035/
 
-# Ideas
+# Ideas & Class structure
 - Holiday of the day
 - anything of the day
+- use calibrate code to get offset first, then manually add to code
