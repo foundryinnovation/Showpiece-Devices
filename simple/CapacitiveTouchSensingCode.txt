@@ -1,0 +1,21 @@
+#define InputPin A1
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(InputPin, INPUT);
+  Serial.begin(115200);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  int inputVoltage = analogRead(InputPin);
+  Serial.println(inputVoltage);
+  if(inputVoltage > 1050){
+    bool inputState = true;
+    Serial.println(inputState);
+  }
+  else{
+    bool inputState = false;
+    Serial.println(inputState);
+  }
+}
