@@ -15,7 +15,7 @@ If we were using the osoyoo 3.5" display for RPI, we need to uncomment and comme
 //#include <User_Setups/Setup666_Integrated_ESP32.h>
 #include <User_Setups/Setup667_OSOYOO_SPI_RPI_35.h>
 ```
-# to knows:
+# how to use json:
 - when getting JsonDocument data, you need to convert it to its type *first* and then use it, so basically:
 ```
 float test = weatherAPI.doc["latitude"];
@@ -23,6 +23,17 @@ Serial.println(test);
 //test will work 
 ```
 - see https://arduinojson.org/v6/assistant/ to see how to deal with json data from apis.
+- JsonArray represents regular C arrays from the json. JsonObjects represent regular dictionaries.
+
+```
+JsonArray daily_temperature_2m_max = daily["temperature_2m_max"];
+float daily_temperature_2m_max_0 = daily_temperature_2m_max[0]; // 73.5
+float daily_temperature_2m_max_1 = daily_temperature_2m_max[1]; // 68.9
+
+JsonObject current = doc["current"];
+const char* current_time = current["time"]; // "2025-05-27T16:00"
+int current_interval = current["interval"]; // 900
+```
 
 # Integrated ESP32:
 The esp32 model is 'ESP32-3248S035R'
