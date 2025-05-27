@@ -35,10 +35,11 @@ const char* current_time = current["time"]; // "2025-05-27T16:00"
 int current_interval = current["interval"]; // 900
 ```
 
-# Integrated ESP32:
+# Random Links:
 The esp32 model is 'ESP32-3248S035R'
 
 For more info, go to 
+- https://randomnerdtutorials.com/arduino-ide-2-install-esp32-littlefs/
 - https://www.elektroda.com/rtvforum/topic4058635.html
 - https://github.com/jonpul/ESP32-2432S024C
 - https://github.com/ardnew/ESP32-3248S035/
