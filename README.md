@@ -22,6 +22,7 @@ float test = weatherAPI.doc["latitude"];
 Serial.println(test);
 //test will work 
 ```
+- see https://arduinojson.org/v6/assistant/ to see how to deal with json data from apis.
 
 # Integrated ESP32:
 The esp32 model is 'ESP32-3248S035R'
