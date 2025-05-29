@@ -1,0 +1,13 @@
+void explosionTransition() {
+  int centerX = tft.width() / 2;
+  int centerY = tft.height() / 2;
+  int maxRadius = sqrt(pow(centerX, 2) + pow(centerY, 2));
+  int frameCount = 20;
+  int radiusStep = maxRadius / frameCount;
+
+  for (int i = 0; i < frameCount; i++) {
+    int radius = i * radiusStep;
+    tft.fillCircle(centerX, centerY, radius, TFT_RED);
+    delay(10);
+  }
+}
