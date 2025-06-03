@@ -1,4 +1,5 @@
 #include <WiFi.h>
+#include <WiFiManager.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
@@ -10,6 +11,8 @@
 #include "LittleFS.h"
 #include "List_LittleFS.h"
 #include "Web_Fetch.h"
+
+#define SIDE_BUTTON_PIN 0     // the side button
 
 /* forward declarations types */
 
@@ -884,6 +887,7 @@ void switchToWindow(int i){
 
 void setup() {
   Serial.begin(115200);
+  pinMode(SIDE_BUTTON_PIN, INPUT_PULLUP);
 
   //fs
   if (!LittleFS.begin(true)) {
@@ -921,40 +925,89 @@ void setup() {
   windows.push_back(WindowObject(drawJokeWindow, eventJokeWindow));
   windows.push_back(WindowObject(drawDogWindow, eventDogWindow));
 
-
-  
-
   //wifi init
-  WiFi.begin(SSID, PASSWORD);
   
-  int dots = 0;
+  WiFiManager wm;
+
+  // Check if reset button is pressed
+  bool resetPressed = digitalRead(SIDE_BUTTON_PIN) == LOW;
+  
+  tft.fillRect(0, tft.height()-30, tft.width(), 30, TFT_BLACK);
   tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  while (WiFi.status() != WL_CONNECTED){
-    tft.fillRect(0, tft.height()-30, tft.width(), 30, TFT_BLACK);
-    String status = "Connecting";
-    for(int i = 0; i < dots; i++) status += ".";
-    tft.drawString(status, 10, tft.height()-25);
-    dots = (dots + 1) % 4;
-    delay(500);
-  }
+  tft.drawString("Connecting...", 10, tft.height()-25);
 
-  if(WiFi.status() == WL_CONNECTED){
+   // launch portal if 1) no creds, 2) reset button held 3 s, or 3) connect fails in 10 s
+  //bool btnPressed = digitalRead(WIFI_RESET_PIN) == LOW;
+  wm.setConfigPortalTimeout(180);          // auto-close in 3 min
+  if (resetPressed || !wm.autoConnect("Mirror-Setup", "mirror123")) {
+    wm.startConfigPortal("Mirror-Setup", "mirror123");
+    tft.fillRect(0, tft.height()-60, tft.width(), 60, TFT_BLACK);
+    tft.setTextSize(2);
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.drawString("Setup needed!", 10, tft.height()-55);
+    tft.setTextSize(1);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString("Join 'Mirror-Setup' on your phone", 10, tft.height()-35);
+    tft.drawString("Password: mirror123", 10, tft.height()-20);
+  }else{
     tft.fillRect(0, tft.height()-30, tft.width(), 30, TFT_BLACK);
     tft.setTextColor(TFT_GREEN, TFT_BLACK);
     tft.drawString("Connected!", 10, tft.height()-25);
     
     // Configure NTP time
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-    
     delay(1000);
-  }else{
-    tft.fillRect(0, tft.height()-30, tft.width(), 30, TFT_BLACK);
-    tft.setTextColor(TFT_RED, TFT_BLACK);
-    tft.drawString("Connection Failed!", 10, tft.height()-25);
-    delay(3000);
-    ESP.restart();
   }
+  /*
+  // Reset settings if button pressed
+  if (resetPressed) {
+      tft.fillRect(0, tft.height()-30, tft.width(), 30, TFT_BLACK);
+      tft.setTextSize(2);
+      tft.setTextColor(TFT_ORANGE, TFT_BLACK);
+      tft.drawString("Resetting WiFi...", 10, tft.height()-25);
+      delay(1000);
+      wm.resetSettings();
+  }
+  
+  // Show connecting message
+  tft.fillRect(0, tft.height()-30, tft.width(), 30, TFT_BLACK);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.drawString("Connecting...", 10, tft.height()-25);
+  
+  // Set AP callback to show portal message
+  wm.setAPCallback([](WiFiManager *myWiFiManager) {
+      tft.fillRect(0, tft.height()-60, tft.width(), 60, TFT_BLACK);
+      tft.setTextSize(2);
+      tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+      tft.drawString("Setup needed!", 10, tft.height()-55);
+      tft.setTextSize(1);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.drawString("Join 'Mirror-Setup' on your phone", 10, tft.height()-35);
+      tft.drawString("Password: mirror123", 10, tft.height()-20);
+  });
+  
+  // Try to connect
+  bool connected = wm.autoConnect("Mirror-Setup", "mirror123");
+  
+  if (connected) {
+      tft.fillRect(0, tft.height()-30, tft.width(), 30, TFT_BLACK);
+      tft.setTextColor(TFT_GREEN, TFT_BLACK);
+      tft.drawString("Connected!", 10, tft.height()-25);
+      
+      // Configure NTP time
+      configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+      
+      delay(1000);
+  } else {
+      tft.fillRect(0, tft.height()-30, tft.width(), 30, TFT_BLACK);
+      tft.setTextColor(TFT_RED, TFT_BLACK);
+      tft.drawString("Connection Failed!", 10, tft.height()-25);
+      delay(3000);
+      ESP.restart();
+  }
+*/
   
   // Initialize APIs
   weatherAPI = APIObject(
@@ -1004,6 +1057,8 @@ void loop() {
   if(millis() - dogAPI.lastUpdate >= dogAPI.updateInterval || millis() < dogAPI.lastUpdate){
     dogAPI.updateData();
   }
+
+  Serial.println(digitalRead(SIDE_BUTTON_PIN));
   
   // Update time periodically (every minute)
   static unsigned long lastTimeUpdate = 0;
