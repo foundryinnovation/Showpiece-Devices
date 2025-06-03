@@ -40,6 +40,7 @@ The esp32 model is 'ESP32-3248S035R'
 
 For more info, go to 
 - https://randomnerdtutorials.com/arduino-ide-2-install-esp32-littlefs/
+- https://bytesnbits.co.uk/arduino-touchscreen-calibration-coding/#1606910525307-c15b5275-547b
 - https://www.elektroda.com/rtvforum/topic4058635.html
 - https://github.com/jonpul/ESP32-2432S024C
 - https://github.com/ardnew/ESP32-3248S035/
