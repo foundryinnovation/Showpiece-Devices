@@ -12,11 +12,11 @@
 #include "List_LittleFS.h"
 #include "Web_Fetch.h"
 
-#define SIDE_BUTTON_PIN 0     // the side button
+#define BOOT_PIN 0     // the side button
 
 /* forward declarations types */
 
-typedef void (*WindowDraw)(); //for making a list of function pointers; respresents drawing the window
+typedef void (*WindowDraw)();  //for making a list of function pointers; respresents drawing the window
 typedef void (*WindowEvent)(); //for making a list of function pointers
 
 typedef struct ScreenPoint ScreenPoint;
@@ -31,6 +31,7 @@ bool checkWifi();
 
 //internal window stuff
 void drawStatusBox(const char*, uint8_t);
+bool tft_output(int16_t , int16_t , uint16_t , uint16_t , uint16_t* );
 
 //windows
 void drawSmartMirrorWindow();
@@ -41,7 +42,9 @@ void eventSmartMirrorWindow();
 void eventWeatherWindow();
 void eventJokeWindow();
 void eventJokeFullWindow();
-bool tft_output(int16_t , int16_t , uint16_t , uint16_t , uint16_t* );
+
+void switchToWindow(int);
+void switchToNextWindow();
 
 //touchscreen
 ScreenPoint getPoint();
@@ -135,56 +138,25 @@ struct APIObject {
   // render each block to the TFT.  If you use a different TFT library
   // you will need to adapt this function to suit.
   
-
-  //for apis that download image links
-  bool downloadAndDrawImage(const char* url, int x, int y) {
-    WiFiClientSecure client;
-    client.setInsecure(); // Skip SSL verification for simplicity (not recommended for production)
-    HTTPClient http;
-
-    if (http.begin(client, url)) {
-      int httpCode = http.GET();
-      if (httpCode == HTTP_CODE_OK) {
-        // Create a TFT_eSprite for drawing the image
-        extern TFT_eSPI tft;
-        TFT_eSprite sprite = TFT_eSprite(&tft);
-        sprite.createSprite(tft.width(), tft.height());
-
-        // Read the image data in chunks
-        WiFiClient* stream = http.getStreamPtr();
-        uint8_t buffer[1024];
-        while (http.connected() && (stream->available() > 0)) {
-          size_t bytesRead = stream->readBytes(reinterpret_cast<char*>(buffer), sizeof(buffer));
-          sprite.pushImage(0, 0, tft.width(), tft.height(), reinterpret_cast<uint16_t*>(buffer), bytesRead);
-        }
-
-        sprite.pushSprite(x, y); // Draw the image on the screen
-        sprite.deleteSprite();
-
-        http.end();
-        return true;
-      }
-    }
-    http.end();
-    return false;
-  }
 };
 
 
 /* variables */
-
-//wifi
-const char* SSID = "Innovation_Foundry";
-const char* PASSWORD = "@Innovate22";
 
 // NTP Time
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = -5 * 3600;  // EST (adjust for your timezone)
 const int   daylightOffset_sec = 3600;   // Daylight saving time
 
+//wifi/apis
 APIObject weatherAPI;
 APIObject jokeAPI;
 APIObject dogAPI;
+
+// Joke display
+String currentFullJoke = "";
+bool showingFullJoke = false;
+bool jokeTruncated = false;
 
 //windows
 std::vector<WindowObject> windows;
@@ -209,10 +181,6 @@ unsigned long lastTouch = 0;
 const unsigned long SCREEN_ROTATION_INTERVAL = 15000; // 15 seconds
 bool autoRotateEnabled = true;
 
-// Joke display
-String currentFullJoke = "";
-bool showingFullJoke = false;
-bool jokeTruncated = false;
 
 // Layout constants for consistent spacing
 const int MARGIN = 20;
@@ -222,6 +190,7 @@ const int LINE_SPACING = 32;
 const int INDICATOR_Y_OFFSET = 35; // Distance from bottom
 
 // High contrast colors for smart mirror
+// colors
 const uint16_t PRIMARY_COLOR = TFT_WHITE;
 const uint16_t SECONDARY_COLOR = TFT_CYAN;
 const uint16_t BACKGROUND_COLOR = TFT_BLACK;
@@ -277,6 +246,8 @@ bool checkWifi(){
   return true;
 }
 
+
+// ***for jpeg decoding***
 bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap){
     // Stop further decoding as image is running off bottom of screen
     if ( y >= tft.height() ) return 0;
@@ -457,7 +428,7 @@ void drawScreenIndicator() {
   int dotSpacing = 25;
   int startX = (tft.width() - (3 * dotSpacing - 10)) / 2;
   
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < windows.size(); i++) {
     int dotX = startX + (i * dotSpacing);
     if (i == currentWindowIndex) {
       tft.fillCircle(dotX, dotY, 5, ACCENT_COLOR);
@@ -750,7 +721,7 @@ void eventSmartMirrorWindow() {
   if (isTouched()) {
     lastTouch = millis();
     fadeTransition();
-    switchToWindow(currentWindowIndex + 1);
+    switchToNextWindow();
   }
 }
 
@@ -773,7 +744,7 @@ void eventWeatherWindow(){
   if (isTouched()) {
     lastTouch = millis();
     fadeTransition();
-    switchToWindow(currentWindowIndex + 1);
+    switchToNextWindow();
   }
 }
 
@@ -802,7 +773,7 @@ void eventJokeWindow(){
       Serial.println("Going to next screen");
       fadeTransition();
       jokeAPI.updateData(); // Get new joke
-      switchToWindow(currentWindowIndex + 1);
+      switchToNextWindow();
     }
   }
 }
@@ -821,7 +792,7 @@ void eventJokeFullWindow() {
     fadeTransition();
     showingFullJoke = false;
     jokeAPI.updateData(); // Get new joke
-    switchToWindow(0); // Go to smart mirror screen
+    switchToNextWindow();
   }
 }
 
@@ -873,21 +844,25 @@ void eventDogWindow() {
     lastTouch = millis();
     fadeTransition();
     //dogAPI.updateData(); // Get new dog image
-    switchToWindow(currentWindowIndex + 1);
+    switchToNextWindow();
   }
 }
 
 
 void switchToWindow(int i){
-  currentWindowIndex = i;
   currentWindow = &windows.at(i % windows.size()); //handles out of bounds index
   lastScreenChange = millis();
   currentWindow->drawFunction();
 }
 
+void switchToNextWindow(){
+  currentWindowIndex = (currentWindowIndex + 1) % windows.size();
+  switchToWindow(currentWindowIndex);
+}
+
 void setup() {
   Serial.begin(115200);
-  pinMode(SIDE_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BOOT_PIN, INPUT_PULLUP);
 
   //fs
   if (!LittleFS.begin(true)) {
@@ -930,7 +905,7 @@ void setup() {
   WiFiManager wm;
 
   // Check if reset button is pressed
-  bool resetPressed = digitalRead(SIDE_BUTTON_PIN) == LOW;
+  bool resetPressed = digitalRead(BOOT_PIN) == LOW;
   
   tft.fillRect(0, tft.height()-30, tft.width(), 30, TFT_BLACK);
   tft.setTextSize(2);
@@ -1034,7 +1009,7 @@ void setup() {
   // Seed random for quotes
   randomSeed(analogRead(0));
 
-  //image
+  //removes cached image
   if (LittleFS.exists("/Dog.jpg") == true) {
     LittleFS.remove("/Dog.jpg");
   }
@@ -1057,8 +1032,6 @@ void loop() {
   if(millis() - dogAPI.lastUpdate >= dogAPI.updateInterval || millis() < dogAPI.lastUpdate){
     dogAPI.updateData();
   }
-
-  Serial.println(digitalRead(SIDE_BUTTON_PIN));
   
   // Update time periodically (every minute)
   static unsigned long lastTimeUpdate = 0;
@@ -1072,7 +1045,7 @@ void loop() {
     if (millis() - lastTouch > SCREEN_ROTATION_INTERVAL && 
         millis() - lastScreenChange > SCREEN_ROTATION_INTERVAL) {
       fadeTransition();
-      switchToWindow(currentWindowIndex + 1);
+      switchToNextWindow();
     }
   }
   
