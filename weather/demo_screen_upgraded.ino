@@ -11,6 +11,7 @@
 #include "LittleFS.h"
 #include "List_LittleFS.h"
 #include "Web_Fetch.h"
+#include <SvgParser.h>
 
 #define BOOT_PIN 0     // the side button
 
@@ -107,6 +108,7 @@ struct APIObject {
         return;
     }
 
+    https.addHeader("Accept", "application/json");
     int httpCode = https.GET();
     if (httpCode <= 0) {
         Serial.printf("HTTP GET failed, error: %s\n", https.errorToString(httpCode).c_str());
@@ -133,11 +135,7 @@ struct APIObject {
     }
     this->lastUpdate = millis();
   }
-
-  // This next function will be called during decoding of the jpeg file to
-  // render each block to the TFT.  If you use a different TFT library
-  // you will need to adapt this function to suit.
-  
+ 
 };
 
 
@@ -229,7 +227,6 @@ ScreenPoint getPoint(){
 }
 
 bool isTouched(){
-  Serial.println("screen touched!");
   return touchscreen.tirqTouched() && touchscreen.touched();
 }
 
@@ -584,7 +581,7 @@ void drawJokeWindow(){
   
   // Get joke
   String joke = "Why don't scientists trust atoms? Because they make up everything!";
-  if (!jokeAPI.doc["error"].as<bool>() && jokeAPI.doc.containsKey("joke")) {
+  if (jokeAPI.doc.containsKey("joke")) {
     joke = jokeAPI.doc["joke"].as<String>();
   }
   currentFullJoke = joke;
@@ -798,10 +795,6 @@ void eventJokeFullWindow() {
 
 // ******DOG WINDOW*******
 void drawDogWindow() {
-  if (LittleFS.exists("/Dog.jpg") == true) {
-    LittleFS.remove("/Dog.jpg");
-  }
-
   Serial.println("draw: dog window");
   tft.fillScreen(BACKGROUND_COLOR);
   
@@ -813,12 +806,11 @@ void drawDogWindow() {
   tft.setTextDatum(TC_DATUM);
   tft.drawString("RANDOM DOG", tft.width()/2, 20);
 
- 
   // Check if the image URL is available in the API response
-  if (!dogAPI.doc["message"].isNull() && getFile(dogAPI.doc["message"].as<String>(), "/Dog.jpg")) {
-    listLittleFS();
+  Serial.println("Does the image exist?");
+  listLittleFS();
+  if (LittleFS.exists("/Dog.jpg")) {
     TJpgDec.drawFsJpg(0, 0, "/Dog.jpg", LittleFS);
-    // Check if the image is in JPEG or PNG format
     
   } else {
     // Fallback message if no image URL is available
@@ -991,13 +983,13 @@ void setup() {
   );
 
   jokeAPI = APIObject(
-    "https://v2.jokeapi.dev/joke/Any?blacklistFlags=nsfw,religious,political,racist,sexist,explicit&type=single",
+    "https://icanhazdadjoke.com/",
     5UL * 60UL * 1000UL  // 5 minute interval
   );
 
   dogAPI = APIObject(
     "https://dog.ceo/api/breeds/image/random",
-    5UL * 60UL * 1000UL  // 5 minute interval
+    60UL * 60UL * 1000UL  // 60 minute interval
   );
 
 
@@ -1005,14 +997,20 @@ void setup() {
   weatherAPI.updateData();
   jokeAPI.updateData();
   dogAPI.updateData();
-
-  // Seed random for quotes
-  randomSeed(analogRead(0));
-
-  //removes cached image
+  //dog image update
   if (LittleFS.exists("/Dog.jpg") == true) {
     LittleFS.remove("/Dog.jpg");
   }
+
+  // Check if the image URL is available in the API response and if can successfully download image
+  if (!dogAPI.doc["message"].isNull() && getFile(dogAPI.doc["message"].as<String>(), "/Dog.jpg")) {
+    Serial.println("Image Downloaded");
+    listLittleFS();
+  }
+  //end update
+   
+  // Seed random for quotes
+  randomSeed(analogRead(0));
 
   listLittleFS();
 
@@ -1031,6 +1029,17 @@ void loop() {
   }
   if(millis() - dogAPI.lastUpdate >= dogAPI.updateInterval || millis() < dogAPI.lastUpdate){
     dogAPI.updateData();
+    if (LittleFS.exists("/Dog.jpg") == true) {
+      LittleFS.remove("/Dog.jpg");
+    }
+
+      // Check if the image URL is available in the API response
+    if (!dogAPI.doc["message"].isNull() && getFile(dogAPI.doc["message"].as<String>(), "/Dog.jpg")) {
+      Serial.println("Image Downloaded");
+      listLittleFS();
+    }
+    
+    
   }
   
   // Update time periodically (every minute)
