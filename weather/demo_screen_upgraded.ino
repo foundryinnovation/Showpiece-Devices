@@ -11,7 +11,6 @@
 #include "LittleFS.h"
 #include "List_LittleFS.h"
 #include "Web_Fetch.h"
-#include <SvgParser.h>
 
 #define BOOT_PIN 0     // the side button
 
@@ -33,6 +32,7 @@ bool checkWifi();
 //internal window stuff
 void drawStatusBox(const char*, uint8_t);
 bool tft_output(int16_t , int16_t , uint16_t , uint16_t , uint16_t* );
+bool ifNullDownloadImage(String, String);
 
 //windows
 void drawSmartMirrorWindow();
@@ -254,6 +254,10 @@ bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap){
 
     // Return 1 to decode next block
     return 1;
+}
+
+bool ifNullDownloadImage(String url, String filepath){
+  return !LittleFS.exists(filepath) && getFile(url, filepath);
 }
 
 void drawStatusBox(const char* text, uint8_t size){
