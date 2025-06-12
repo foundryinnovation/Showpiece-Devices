@@ -45,6 +45,7 @@ For more info, go to
 - https://github.com/jonpul/ESP32-2432S024C
 - https://github.com/ardnew/ESP32-3248S035/
 - https://www.openhasp.com/0.7.0/hardware/sunton/esp32-3248s035/
+- https://gist.github.com/akeaswaran/b48b02f1c94f873c6655e7129910fc3b
 
 # Ideas & Class structure
 - Holiday of the day
